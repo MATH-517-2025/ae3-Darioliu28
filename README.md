@@ -44,7 +44,14 @@ $$h_{AMISE} = n^{-1/5} \bigg( \frac{35 \sigma^2 \vert supp(X) \vert}{\theta_{22}
 
 where the two unknown quantities $\sigma^2$ and $\theta_{22}$ can be estimated by parametric OLS. For instance, one can
 
--   Block the sample in $N$ blocks and fit, in each block $j$, the model $$y_i = \beta_{0j} + \beta_{1j} x_i + \beta_{2j} x_i^2 + \beta_{3j} x_i^3 + \beta_{4j} x_i^4 + \epsilon_i$$ to obtain estimate $$\hat{m}\_j = \hat{\beta}\_{0j} + \hat{\beta}\_{1j} x_i + \hat{\beta}\_{2j} x_i^2 + \hat{\beta}\_{3j} x_i^3 + \hat{\beta}_{4j} x_i^4$$
+-   Block the sample in $N$ blocks and fit, in each block $j$, the model 
+    $$ 
+    y_i = \beta_{0j} + \beta_{1j} x_i + \beta_{2j} x_i^2 + \beta_{3j} x_i^3 + \beta_{4j} x_i^4 + \epsilon_i 
+    $$ 
+    to obtain estimate 
+    $$
+    \hat{m}\_j = \hat{\beta}\_{0j} + \hat{\beta}\_{1j} x_i + \hat{\beta}\_{2j} x_i^2 + \hat{\beta}\_{3j} x_i^3 + \hat{\beta}_{4j} x_i^4
+    $$
 
 
 -   Estimate the unknown quantities by
