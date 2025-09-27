@@ -1,0 +1,215 @@
+---
+title: "MATH-517 Assignment 3"
+author: "Dario Liuzzo"
+format: 
+  pdf:
+  
+    documentclass: article
+    toc: false
+    number-sections: true
+---
+
+# Theoretical exercise - Local Linear Regression as a Linear Smoother
+
+## Weight Expression Derivation
+
+Consider the local linear regression estimator at a point $x$, defined by minimizing
+$$
+\sum_{i=1}^n \left[ Y_i - \beta_0 - \beta_1 (X_i - x) \right]^2 K\left( \frac{X_i - x}{h} \right)
+$$
+
+with respect to $\beta_0, \beta_1$, giving $\hat{m}(x) = \hat{\beta}_0(x)$.
+
+Let $K_i = K\left( \frac{X_i - x}{h} \right)$. The weighted least squares problem can be written as
+$$
+\hat{\beta} = \arg \min_{\beta \in \mathbb{R}^{p+1}} 
+(Y - X\beta)^\top W (Y - X\beta) 
+$$ 
+
+where 
+$$
+X = \begin{bmatrix} 1 & X_1 - x \\ \vdots & \vdots \\ 1 & X_n - x \end{bmatrix}, \quad W = \text{diag}(K_1, \dots, K_n), \quad Y = \begin{bmatrix} Y_1 \\ \vdots \\ Y_n \end{bmatrix}, \quad \beta = \begin{bmatrix} \beta_0 \\ \beta_1 \end{bmatrix}.
+$$
+
+The solution to this problem is
+
+$$
+\hat{\beta}=(X^\top W X)^{-1} X^\top W Y
+$$
+
+We compute 
+$$
+X^T W X = \begin{bmatrix} \sum_{i=1}^n K_i & \sum_{i=1}^n K_i (X_i - x) \\ \sum_{i=1}^n K_i (X_i - x) & \sum_{i=1}^n K_i (X_i - x)^2 \end{bmatrix}
+= n h \begin{bmatrix} S_{n,0}(x) & S_{n,1}(x) \\ S_{n,1}(x) & S_{n,2}(x) \end{bmatrix},
+$$ 
+
+where $S_{n,k}(x) = \frac{1}{n h} \sum_{i=1}^n (X_i - x)^k K_i$.
+
+Also, 
+$$
+X^T W Y = \begin{bmatrix} \sum_{i=1}^n K_i Y_i \\ \sum_{i=1}^n K_i (X_i - x) Y_i \end{bmatrix}.
+$$
+
+The inverse of $X^T W X$ is 
+$$
+\frac{1}{n h (S_{n,0}(x) S_{n,2}(x) - S_{n,1}^2(x))} \begin{bmatrix} S_{n,2}(x) & -S_{n,1}(x) \\ -S_{n,1}(x) & S_{n,0}(x) \end{bmatrix}.
+$$
+
+Thus, 
+$$
+\hat{\beta}_0 = \frac{ S_{n,2}(x) \sum_{i=1}^n K_i Y_i - S_{n,1}(x) \sum_{i=1}^n K_i (X_i - x) Y_i }{ n h (S_{n,0}(x) S_{n,2}(x) - S_{n,1}^2(x)) }.
+$$
+
+Rewriting, 
+$$
+\hat{m}(x) = \hat{\beta}_0 = \sum_{i=1}^n Y_i \cdot \frac{ K_i S_{n,2} - K_i (X_i - x) S_{n,1} }{ n h (S_{n,0} S_{n,2} - S_{n,1}^2) }.
+$$
+
+So the weight is 
+$$
+w_{ni}(x) = \frac{1}{n h} K_i \cdot \frac{ S_{n,2}(x) - (X_i - x) S_{n,1}(x) }{ S_{n,0}(x) S_{n,2}(x) - S_{n,1}(x)^2 },
+$$ 
+
+## Proof that $\sum_{i=1}^n w_{ni}(x) = 1$
+
+We have $$
+\sum_{i=1}^n w_{ni}(x) = \frac{ \sum_{i=1}^n K_i S_{n,2} - \sum_{i=1}^n K_i (X_i - x) S_{n,1} }{ n h (S_{n,0} S_{n,2} - S_{n,1}^2) }.
+$$
+
+Note that: 
+
+- $\sum_{i=1}^n K_i = n h S_{n,0}$, so first term = $n h S_{n,0} S_{n,2}$ 
+
+- $\sum_{i=1}^n K_i (X_i - x) = n h S_{n,1}$, so second term = $n h S_{n,1}^2$
+
+Thus numerator = $n h (S_{n,0} S_{n,2} - S_{n,1}^2)$, hence the ratio equals 1.
+
+Therefore, $\sum_{i=1}^n w_{ni}(x) = 1$.
+
+# Practical exercise
+
+
+Unless stated otherwise, your answer to the practical part should include the following elements:
+
+-   Description of the aim of the simulation study.
+-   Description of the different quantities that intervene in your simulation study. Explain how these quantities (fixed or random) are defined and the reasoning behind the choices you made.
+-   Description of your findings using appropriate graphics and/or tables (with a caption!) that are well commented in the text.
+
+The code should not appear in the PDF report, unless there is a specific reason to include it.
+
+```{python}
+#| echo: false
+#| message: false
+#| warning: false
+%run main.py
+
+```
+
+Ciao
+
+```{python}
+#| echo: false
+#| message: false
+#| warning: false
+
+selected_pairs = [(1,1), (0.5,5), (2,0.5)]
+df_filtered = df_using_N_opt[df_using_N_opt[['alpha','beta']].apply(tuple, axis=1).isin(selected_pairs)]
+
+df_filtered['alpha_beta'] = df_filtered.apply(lambda row: f"α={row.alpha}, β={row.beta}", axis=1)
+
+plt.figure(figsize=(8,6))
+
+sns.lineplot(data=df_filtered, 
+             x='dim_sample', y='bandwidth', 
+             hue='alpha_beta', 
+             markers=True, style='alpha_beta', dashes=False,
+             palette="tab10")
+
+
+n_vals = sorted(df_filtered['dim_sample'].unique())
+theory = [n**(-1/5) for n in n_vals]
+plt.plot(n_vals, theory, 'k--', label=r"$n^{-1/5}$")  
+
+plt.xscale('log')
+plt.xlabel("Sample size n (log scale)")
+plt.ylabel(r"Optimal bandwidth $h_{\text{AMISE}}$")
+plt.title(r"Comparison of empirical $h_{\text{AMISE}}$ with theoretical $n^{-1/5}$")
+plt.legend(title=r"($\alpha$, $\beta$) pair")
+plt.show()
+
+```
+
+The figure compares the empirical behavior of the optimal bandwidth $h_{\text{AMISE}}$ 
+with the theoretical rate $n^{-1/5}$ for different Beta parameter pairs $(\alpha,\beta)$. 
+For some distributions, such as $(1,1)$, the empirical estimates follow the expected trend closely, 
+confirming the theoretical prediction. However, for other parameterizations, for instance $(2,0.5)$, 
+certain deviations appear, with the empirical values not aligning perfectly with the $n^{-1/5}$ curve. 
+A plausible explanation is the strong asymmetry of the Beta distribution in these cases, which leads to 
+an uneven allocation of observations across blocks. This imbalance affects the stability of local 
+polynomial fits, thereby producing variability in the estimation of $\theta_{22}$ and $\sigma^2$, 
+and ultimately in the calculation of $h_{\text{AMISE}}$.
+
+```{python}
+#| echo: false
+#| message: false
+#| warning: false
+plt.figure(figsize=(8,6))
+sns.lineplot(data=df_using_various_N, x='num_blocks', y='bandwidth', hue='dim_sample', markers=True, dashes=False)
+plt.xlabel("Number of blocks N")
+plt.ylabel("h_AMISE")
+plt.title("Effect of block size N on h_AMISE")
+plt.show()
+
+```
+The plot shows the dependence of the optimal bandwidth $h_{\text{AMISE}}$ on the number of blocks $N$, aggregated over different choices of the Beta distribution parameters. The general trend indicates that as $N$ increases, the bandwidth decreases. This behavior is expected: partitioning the sample into a larger number of blocks effectively reduces the variance of the estimator, allowing for a finer resolution of the underlying density. Consequently, the optimal bandwidth adapts by shrinking, so as to balance bias and variance in accordance with the asymptotic mean integrated squared error (AMISE) criterion.
+
+```{python}
+#| echo: false
+#| message: false
+#| warning: false
+
+# scegli 3 valori di n e 3 valori di alpha
+selected_n = [200, 1000, 5000]
+selected_alpha = [0.5, 1, 2]
+selected_beta = [0.5, 1, 2, 5]   # massimo 4 curve per subplot
+
+df_filtered = df_using_various_N[
+    (df_using_various_N['dim_sample'].isin(selected_n)) &
+    (df_using_various_N['alpha'].isin(selected_alpha)) &
+    (df_using_various_N['beta'].isin(selected_beta))
+]
+
+# FacetGrid 3x3
+g = sns.FacetGrid(df_filtered, col='dim_sample', row='alpha',
+                  margin_titles=True, height=3)
+
+g.map_dataframe(sns.lineplot, 
+                x='num_blocks', y='bandwidth', 
+                hue='beta', style='beta', markers=True, dashes=False)
+
+g.set_axis_labels("Number of blocks N", r"$h_{\text{AMISE}}$")
+g.add_legend(title="Beta parameter")
+plt.subplots_adjust(top=0.9)
+g.fig.suptitle("Effect of N on $h_{AMISE}$ across sample sizes and alpha values")
+
+plt.show()
+
+```
+
+When differentiating by both $\alpha$ and $\beta$, the same general trend is observed: the optimal bandwidth $h_{\text{AMISE}}$ decreases as the number of blocks $N$ increases. This pattern holds consistently across different sample sizes and values of $\alpha$, in line with the behavior described previously. Only in rare cases, typically corresponding to more asymmetric Beta distributions, slight deviations from the monotone decreasing trend appear. These discrepancies can be attributed to the uneven concentration of observations in different regions of the support, which affects the local variance estimation and therefore the stability of the optimal bandwidth.
+
+```{python}
+#| echo: false
+#| message: false
+#| warning: false
+
+pivot_df = df_using_N_opt.pivot_table(values='bandwidth', index='alpha', columns='beta', aggfunc='mean')
+plt.figure(figsize=(8,6))
+sns.heatmap(pivot_df, cmap="viridis")
+plt.title("Effect of Beta distribution (alpha, beta) on h_AMISE")
+plt.xlabel("Beta parameter")
+plt.ylabel("Alpha parameter")
+plt.show()
+```
+
+The heatmap illustrates how the optimal bandwidth $h_{\text{AMISE}}$ depends on the parameters of the Beta distribution. A clear pattern emerges: moving towards the bottom-left corner of the heatmap (high $\alpha$, low $\beta$) corresponds to larger values of $h$, whereas moving towards the top-right (low $\alpha$, high $\beta$) leads to smaller $h$. This behavior is consistent with theoretical expectations. When $\alpha$ is large and $\beta$ is small, the Beta distribution becomes heavily skewed towards the right boundary, concentrating probability mass in a narrow region. This sharp asymmetry requires a larger bandwidth to smooth effectively across the steep density gradients. Conversely, when $\alpha$ is small and $\beta$ is large, the mass shifts towards the left boundary, producing a less concentrated distribution, for which a smaller bandwidth suffices.
