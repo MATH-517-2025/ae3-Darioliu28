@@ -18,7 +18,7 @@ for n in n_list:
     for alpha in alpha_list:
         for beta in beta_list:
             N_opt=compute_N_optimal(n,alpha,beta,sigma_2,N_list)
-            h_AMISE, theta22_hat, sigma2_hat, RSS, support_length = optimal_bandwidth(n,alpha,beta,sigma_2,N_opt)
+            h_AMISE, _, _, theta22_hat, sigma2_hat, RSS, support_length = optimal_bandwidth(n,alpha,beta,sigma_2,N_opt)
             rows.append({"bandwidth": h_AMISE, 
                         "dim_sample": n,
                         "num_blocks_opt": N_opt,
@@ -35,7 +35,7 @@ for n in n_list:
     for alpha in alpha_list:
         for beta in beta_list:
             for N in N_list:
-                h_AMISE, theta22_hat, sigma2_hat, RSS, support_length = optimal_bandwidth(n,alpha,beta,sigma_2,N)
+                h_AMISE, _, _, theta22_hat, sigma2_hat, RSS, support_length = optimal_bandwidth(n,alpha,beta,sigma_2,N)
                 rows2.append({"bandwidth": h_AMISE, 
                             "dim_sample": n,
                             "num_blocks": N,
@@ -45,6 +45,13 @@ for n in n_list:
                             "support_length": support_length})
                 
 df_using_various_N=pd.DataFrame(rows2)
+
+
+
+
+
+
+
 
 
 

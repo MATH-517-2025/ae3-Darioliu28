@@ -1,6 +1,6 @@
 import numpy as np
 
-def data_generation(n, alpha, beta, sigma_2,):
+def data_generation(n, alpha, beta, sigma_2):
     epsilon=np.random.normal(loc=0, scale=sigma_2, size=n)
     X=np.random.beta(a=alpha, b=beta, size=n)
 
@@ -58,7 +58,7 @@ def optimal_bandwidth(n,alpha,beta,sigma_2,N):
     sigma2_hat = RSS / (n - 5*N)
     h_AMISE = n**(-1/5) * (35 * sigma2_hat * support_len(X) / theta22_hat)**(1/5)
 
-    return h_AMISE, theta22_hat, sigma2_hat, RSS, support_len(X)
+    return h_AMISE, X, Y, theta22_hat, sigma2_hat, RSS, support_len(X)
 
 def compute_N_optimal(n,alpha,beta,sigma_2,N_list):
 
