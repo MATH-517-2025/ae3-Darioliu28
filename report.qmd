@@ -105,6 +105,9 @@ The analysis evaluates:
   \item How the Beta distribution parameters $(\alpha, \beta)$ shape the optimal bandwidth through their effect on the distribution of $X$.
 \end{itemize}
 
+
+
+
 ```{python}
 #| echo: false
 #| message: false
@@ -139,7 +142,7 @@ plt.plot(n_vals, theory, 'k--', label=r"$n^{-1/5}$")
 plt.xscale('log')
 plt.xlabel("Sample size n (log scale)")
 plt.ylabel(r"Optimal bandwidth $h_{\text{AMISE}}$")
-plt.title(r"Comparison of empirical $h_{\text{AMISE}}$ with theoretical $n^{-1/5}$")
+plt.title(r"Optimal bandwidht $h_{\text{AMISE}}$ when sample size $n$ varies")
 plt.legend(title=r"($\alpha$, $\beta$) pair")
 plt.show()
 
@@ -149,8 +152,18 @@ The figure illustrates the impact of the sample size $n$ on the magnitude of the
 
 However, for asymmetric distributions, particularly when the Beta distribution is strongly skewed to the right (e.g., $(\alpha, \beta) = (5,0.5)$), the pattern of $h_{\text{AMISE}}$ as a function of $n$ can deviate from monotonicity. In these cases, the uneven allocation of observations across the support of $X$ results in blocks containing highly concentrated data regions near the mode, while other blocks may contain sparse data. This imbalance affects the stability of the blockwise polynomial estimation used to approximate the second derivative of $m(x)$ and the local variance $\sigma^2$, leading to fluctuations in the computed $h_{\text{AMISE}}$. Consequently, the bandwidth does not decrease uniformly with increasing sample size, reflecting the interaction between sample density, distribution asymmetry, and the block-based estimation procedure.
 
-In summary, the figure demonstrates that \textbf{sample size strongly influences the magnitude of the optimal bandwidth}, with smaller bandwidths generally supported by larger datasets, but the precise behavior depends on the shape of the covariate distribution. Symmetric distributions yield a predictable decreasing trend, while skewed distributions introduce irregularities due to local sparsity and concentration effects.
-
+In summary, the figure demonstrates that sample size strongly influences the magnitude of the optimal bandwidth, with smaller bandwidths generally supported by larger datasets, but the precise behavior depends on the shape of the covariate distribution. The figure was obtained by selecting the optimal number of blocks $N$ minimizing Mallow's $C_p$,
+$$
+C_p(N)=\frac{\text{RSS}(N)}{\text{RSS}(N_{\max }) / (n-5 N_{\max })} -(n-10 N),
+$$
+where
+$$
+\text{RSS}(N) =  \sum_{i=1}^n \sum_{j=1}^N \left\{ Y_i - \hat{m}_j(X_i) \right\}^2 \mathbb{1}_{X_i \in \mathcal{X}_j},
+$$
+and
+$$
+N_{\max}= \max \left\{ \min \left(\left\lfloor \tfrac{n}{20}\right\rfloor, 5 \right), 1\right\}.
+$$
 ```{python}
 #| echo: false
 #| message: false
@@ -163,19 +176,16 @@ plt.title("Effect of block size N on h_AMISE")
 plt.show()
 
 ```
-The figure illustrates the influence of the number of blocks $N$ on the optimal bandwidth $h_{\text{AMISE}}$, aggregated across various Beta distribution parameter configurations. A clear decreasing trend of $h_{\text{AMISE}}$ with increasing $N$ is observed. This pattern can be understood in terms of the blockwise estimation procedure used to approximate the second derivative of $m(x)$ and the local variance $\sigma^2$. Dividing the sample into a larger number of blocks effectively increases the local resolution of the data, allowing the polynomial fits to capture finer features of the regression function. As a result, the estimated variance within each block is reduced, which in turn leads to smaller optimal bandwidths that balance bias and variance according to the AMISE criterion. 
-
-This behavior complements the observations regarding the effect of sample size: while larger $n$ generally allows for a reduction in bandwidth by providing more information, increasing $N$ fine-tunes the blockwise estimation, further refining the choice of $h_{\text{AMISE}}$.
+The figure illustrates the influence of the number of blocks $N$ on the optimal bandwidth $h_{\text{AMISE}}$, aggregated across various Beta distribution parameter configurations. Increasing $N$ refines the local estimation of $\sigma^2$ and $m''(x)$, which reduces the bias in the plug-in estimates and can lead to smaller values of the estimated optimal bandwidth. At the same time, however, each block contains fewer observations as $N$ grows, which increases the variance of the blockwise estimates. The observed decreasing trend of $h_{\text{AMISE}}$ with $N$ in this simulation suggests that the bias reduction effect dominates in the explored regime. The conclusion is that the number of blocks $N$ should depend on the sample size $n$. With too few blocks, the blockwise polynomial fits suffer from bias because they average over wide regions, whereas with too many blocks, the variance of the estimates increases due to the small number of observations per block. The optimal choice of $N$ therefore balances this bias–variance tradeoff and increases with $n$, since larger samples can sustain a finer partition of the covariate space. This motivates the use of data-driven selection rules such as Mallow's $C_p$, which adapt $N$ to the available sample size.
 
 ```{python}
 #| echo: false
 #| message: false
 #| warning: false
 
-# scegli 3 valori di n e 3 valori di alpha
 selected_n = [200, 1000, 5000]
 selected_alpha = [0.5, 1, 2]
-selected_beta = [0.5, 1, 2, 5]   # massimo 4 curve per subplot
+selected_beta = [0.5, 1, 2, 5]  
 
 df_filtered = df_using_various_N[
     (df_using_various_N['dim_sample'].isin(selected_n)) &
@@ -183,7 +193,6 @@ df_filtered = df_using_various_N[
     (df_using_various_N['beta'].isin(selected_beta))
 ]
 
-# FacetGrid 3x3
 g = sns.FacetGrid(df_filtered, col='dim_sample', row='alpha',
                   margin_titles=True, height=3)
 
@@ -200,7 +209,7 @@ plt.show()
 
 ```
 
-When differentiating by both $\alpha$ and $\beta$, the same general trend is observed: the optimal bandwidth $h_{\text{AMISE}}$ decreases as the number of blocks $N$ increases. This pattern holds consistently across different sample sizes and values of $\alpha$, in line with the behavior described previously. Only in rare cases, typically corresponding to more asymmetric Beta distributions, slight deviations from the monotone decreasing trend appear.
+When differentiating by both $\alpha$ and $\beta$, the same general trend is observed: the optimal bandwidth $h_{\text{AMISE}}$ decreases as the number of blocks $N$ increases. This pattern holds consistently across different sample sizes and values of $\alpha$, in line with the behavior described previously.
 
 ```{python}
 #| echo: false
@@ -220,14 +229,12 @@ The heatmap illustrates the dependence of the optimal bandwidth $h_{\text{AMISE}
 
 For right-skewed distributions, the majority of observations are located away from the steep region near $x=0$. Consequently, when estimating $m(x)$ close to $0$, very few points are available locally, and the kernel must span a wider range to gather enough neighbors for a stable estimate. This necessity results in a larger optimal bandwidth. Conversely, for left-skewed distributions, most points lie near $x=0$, directly in the steep region of $m(x)$. Even a relatively small bandwidth suffices to include a sufficient number of observations for accurate local linear estimation, resulting in a smaller optimal $h$.
 
-Thus, the observed asymmetry in $h_{\text{AMISE}}$ across the heatmap does not reflect differences in the steepness of $m(x)$ itself, but rather the density of covariate observations in the steep region of the function. The optimal bandwidth is larger when the steep region is sparsely populated and smaller when it is densely populated, illustrating the crucial role of the covariate distribution in determining the smoothing parameter in local linear regression.
-
 
 To illustrate the performance of the local linear estimator with the optimal bandwidth $h_{\text{AMISE}}$, we simulated a sample of size $n=500$ from the model $Y_i = m(X_i) + \epsilon_i$, where $X_i \sim \text{Beta}(\alpha,\beta)$ with $(\alpha,\beta)=(2,2)$ and $\epsilon_i \sim \mathcal{N}(0, \sigma^2)$ with $\sigma^2 = 0.3$. The goal was to use the blockwise polynomial approximation to select $h_{\text{AMISE}}$ and then construct the local linear estimator $\hat{m}(x)$ for $m(x) = \sin\big((x/3 + 0.1)^{-1}\big)$. This allows us to assess how well the nonparametric method captures the true regression function, particularly in regions with steep curvature and varying data density.
 
-The figure shows the results of this procedure. The scatter points represent the simulated observations. The dashed crimson line corresponds to the true regression function $m(x)$, while the solid green line depicts the local linear estimate $\hat{m}(x)$ obtained using the computed optimal bandwidth. 
+The figure shows the results of this procedure. The scatter points represent the simulated observations. The red line corresponds to the true regression function $m(x)$, while the green line corresponds to the local linear estimate $\hat{m}(x)$ obtained using the computed optimal bandwidth. 
 
-From the visualization, we observe that the local linear estimator accurately captures the overall shape of $m(x)$ across the support of $X$. In areas with a higher concentration of data points, the estimator follows the true function closely, whereas near the boundaries, particularly where the Beta density is lower, the estimator exhibits slightly higher variability, which is expected due to the limited local information. Overall, this exercise demonstrates that combining blockwise polynomial estimation for bandwidth selection with local linear smoothing provides a flexible and effective approach for nonparametric regression, adapting well to both steep gradients and varying observation density.
+From the visualization, we observe that the local linear estimator accurately captures the overall shape of $m(x)$ across the support of $X$. In areas with a higher concentration of data points, the estimator follows the true function closely, whereas near the boundaries, particularly where the Beta density is lower, the estimator exhibits slightly higher variability, which is expected due to the limited local information.
 ```{python}
 #| echo: false
 #| message: false

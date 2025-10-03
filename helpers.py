@@ -9,15 +9,16 @@ def data_generation(n, alpha, beta, sigma_2):
 
     return X,Y
 
-def blocks_creator(X, Y, N):
-    quantiles = np.quantile(X, np.linspace(0,1,N+1))
+def blocks_creator(X, Y, N, a=0.0, b=1.0):
+    edges = np.linspace(a, b, N+1)
     blocks_X, blocks_Y = [], []
     
     for j in range(N):
+        left, right = edges[j], edges[j+1]
         if j < N-1:
-            mask = (X >= quantiles[j]) & (X < quantiles[j+1])
-        else: 
-            mask = (X >= quantiles[j]) & (X <= quantiles[j+1])
+            mask = (X >= left) & (X < right)
+        else:
+            mask = (X >= left) & (X <= right)
         blocks_X.append(X[mask])
         blocks_Y.append(Y[mask])
     return blocks_X, blocks_Y

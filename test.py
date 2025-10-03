@@ -3,7 +3,7 @@ from helpers import *
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-#example with X_i~Beta(2,2), number of sample n=1000, number of blocks N=6
+#example with X_i~Beta(2,2), number of sample n=1000
 
 np.random.seed(1)
 alpha, beta=2,2
