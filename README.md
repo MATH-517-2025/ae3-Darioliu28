@@ -1,3 +1,4 @@
+[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/51DI_w4M)
 # 1. Theoretical exercise: Local linear regression as a linear smoother
 
 Recall our basic setup: we are given i.i.d. samples $\left(x_i, y_i\right), i=1, \ldots n$ from the model
@@ -43,7 +44,14 @@ $$h_{AMISE} = n^{-1/5} \bigg( \frac{35 \sigma^2 \vert supp(X) \vert}{\theta_{22}
 
 where the two unknown quantities $\sigma^2$ and $\theta_{22}$ can be estimated by parametric OLS. For instance, one can
 
--   Block the sample in $N$ blocks and fit, in each block $j$, the model $$y_i = \beta_{0j} + \beta_{1j} x_i + \beta_{2j} x_i^2 + \beta_{3j} x_i^3 + \beta_{4j} x_i^4 + \epsilon_i$$ to obtain estimate $$\hat{m}\_j = \hat{\beta}\_{0j} + \hat{\beta}\_{1j} x_i + \hat{\beta}\_{2j} x_i^2 + \hat{\beta}\_{3j} x_i^3 + \hat{\beta}_{4j} x_i^4$$
+-   Block the sample in $N$ blocks and fit, in each block $j$, the model 
+    $$ 
+    y_i = \beta_{0j} + \beta_{1j} x_i + \beta_{2j} x_i^2 + \beta_{3j} x_i^3 + \beta_{4j} x_i^4 + \epsilon_i 
+    $$ 
+    to obtain estimate 
+    $$
+    \hat{m}\_j = \hat{\beta}\_{0j} + \hat{\beta}\_{1j} x_i + \hat{\beta}\_{2j} x_i^2 + \hat{\beta}\_{3j} x_i^3 + \hat{\beta}_{4j} x_i^4
+    $$
 
 
 -   Estimate the unknown quantities by
